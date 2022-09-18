@@ -16,7 +16,7 @@ app.use((req,res,next) => {
 
 app.use('/auth', auth)
 
-app.use((req, res, next) => {
+function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
 
@@ -27,9 +27,9 @@ app.use((req, res, next) => {
     req.userId = user.id
     next()
   })
-});
+}
 
-app.get('/', (req, res) => {
+app.get('/', authenticateToken, (req, res) => {
   res.sendStatus(200);
 })
 
