@@ -4,17 +4,8 @@ const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const dbo = require('./db/conn');
 const auth = require('./routes/auth')
+const upload = require('./routes/upload')
 require('dotenv').config()
-
-app.use(cors())
-app.use(express.json())
-
-app.use((req,res,next) => {
-  req.dbConnect = dbo.getDb();
-  next();
-});
-
-app.use('/auth', auth)
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization']
@@ -29,7 +20,19 @@ function authenticateToken(req, res, next) {
   })
 }
 
-app.get('/', authenticateToken, (req, res) => {
+app.use(cors())
+app.use(express.json())
+
+app.use((req,res,next) => {
+  req.dbConnect = dbo.getDb();
+  next();
+});
+
+app.use('/auth', auth)
+
+app.use('/upload', authenticateToken, upload)
+
+app.get('/', (req, res) => {
   res.sendStatus(200);
 })
 
