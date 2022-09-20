@@ -1,5 +1,4 @@
 const express = require('express')
-const router = express.Router()
 const multer = require('multer')
 const crypto = require('crypto')
 const path = require('path')
@@ -15,14 +14,9 @@ const storage = multer.diskStorage({
     cb(null, dir)
   },
   filename: function (req, file, cb) {
-    cb(null, req.hashedFileName + path.extname(file.originalname))
+    req.hashedFileName += path.extname(file.originalname)
+    cb(null, req.hashedFileName)
   }
 })
 
-const upload = multer({ storage: storage })
-
-router.post('/', upload.single('avatar'), (req, res) => {
-  res.sendStatus(201);
-})
-
-module.exports = router
+module.exports.upload = multer({ storage: storage});

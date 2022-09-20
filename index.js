@@ -4,7 +4,7 @@ const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const dbo = require('./db/conn');
 const auth = require('./routes/auth')
-const upload = require('./routes/upload')
+const user = require('./routes/user')
 require('dotenv').config()
 
 function authenticateToken(req, res, next) {
@@ -30,9 +30,9 @@ app.use((req,res,next) => {
 
 app.use('/auth', auth)
 
-app.use('/upload', authenticateToken, upload)
+app.use('/u', authenticateToken, user)
 
-app.get('/', (req, res) => {
+app.get('/', authenticateToken, (req, res) => {
   res.sendStatus(200);
 })
 
