@@ -22,6 +22,7 @@ function authenticateToken(req, res, next) {
 
 app.use(cors())
 app.use(express.json())
+app.use(express.static('public'))
 
 app.use((req,res,next) => {
   req.dbConnect = dbo.getDb();
