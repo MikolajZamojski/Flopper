@@ -18,6 +18,21 @@ router.post('/pfp', authenticateToken, pfpUpload.single('avatar'), async (req, r
   res.sendStatus(201);
 })
 
+router.get('/:userId/short', authenticateToken, async(req, res)=> {
+  const data = await req.dbConnect.collection("Users").findOne({_id: req.params.userId}, {projection: {"full-name": 1, "pfp-filename": 1}});
+  if(data === null) {
+    return res.status(400).json({err: "User doesn't exist!"});
+  }
+  res.status(200).json(data)
+})
+
+router.get('/search', authenticateToken, async(req, res) => {
+  const data = await req.dbConnect.collection("Users").find({$search: {index: "userSearch", text: {query: req.query.query, path: { wildcard: "*"}, fuzzy: {}}}})
+  console.log(data)
+  // const data = await req.dbConnect.collection("Users").find({$text: {$search: req.query.query}})
+  res.status(200).json(data)
+})
+
 router.post('/about', authenticateToken, async(req, res) => {
   let {about} = req.body;
   if(about === undefined)
