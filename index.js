@@ -27,13 +27,15 @@ app.get('/', authenticateToken, (req, res) => {
   res.sendStatus(200);
 })
 
+const PORT = process.env.PORT || 5000
+
 dbo.connectToServer(function (err) {
   if (err) {
     console.error(err);
     process.exit();
   }
 
-  app.listen(process.env.PORT, () => {
-    console.log(`Example app listening on port ${process.env.PORT}`)
+  app.listen(PORT, () => {
+    console.log(`Flopper API listening on port ${PORT}`)
   })
 });
