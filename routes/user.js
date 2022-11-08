@@ -29,7 +29,7 @@ router.get('/:userId/short', async(req, res)=> {
 router.get('/search', async(req, res) => {
   if(req.query.query.trim() != "") {
     const data = await req.dbConnect.collection("Users").aggregate([
-      {$search: {index: "userSearch", autocomplete: {query: req.query.query.trim(), path: { wildcard: "*"}, fuzzy: {}}}},
+      {$search: {$compound: {$should: [{index: "userSearch", autocomplete: {query: req.query.query.trim(), path: "_id", fuzzy: {maxEdits: 1}}}, {index: "userSearch", autocomplete: {query: req.query.query.trim(), path: "full-name", fuzzy: {maxEdits: 1}}}], minimumShouldMatch: 0}}},
       {$limit: 5},
       {$project: {"full-name": 1, "pfp-filename": 1}}
     ]).toArray()
