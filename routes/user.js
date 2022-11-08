@@ -33,7 +33,7 @@ router.get('/search', async(req, res) => {
       {$limit: 5},
       {$project: {"full-name": 1, "pfpfilename": 1}}
     ]).toArray()
-    res.status(200).json(data)
+    return res.status(200).json(data)
   }
   res.status(400).json({err: "Missing search query!"})
 })
