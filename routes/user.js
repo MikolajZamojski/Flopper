@@ -92,6 +92,15 @@ router.put('/:userId/follow', authenticateToken, async(req, res) => {
   return res.sendStatus(201);
 })
 
+router.get('/:userId/friends', async(req, res) => {
+  // const user = await req.dbConnect.collection("Users").findOne({_id: req.params.userId});
+  // if(user === null) {
+  //   return res.status(400).json({err: "User doesn't exist!"})
+  // }
+  const friendResult = await req.dbConnect.collection("Friends").findOne({friends : {$all : [req.params.userId]}, pending: false});
+  res.status(200).json(friendResult)
+})
+
 router.put('/:userId/friend', authenticateToken, async(req, res) => {
   if(req.params.userId === req.userId) {
     return res.status(400).json({err: "You can't friend yourself!"});
