@@ -93,12 +93,13 @@ router.put('/:userId/follow', authenticateToken, async(req, res) => {
 })
 
 router.get('/:userId/friends', async(req, res) => {
-  // const user = await req.dbConnect.collection("Users").findOne({_id: req.params.userId});
-  // if(user === null) {
-  //   return res.status(400).json({err: "User doesn't exist!"})
-  // }
-  const friendResult = await req.dbConnect.collection("Friends").findOne({friends : {$all : [req.params.userId]}, pending: false});
-  res.status(200).json(friendResult)
+  const friendResult = await req.dbConnect.collection("Friends").find({friends : req.params.userId, pending: false}, {projection: {_id: 0, friends: 1}}).toArray();
+  let friends = [];
+  friendResult.forEach(friendsObj => {
+    friends.push(friendsObj.friends.filter(friendId => {return friendId !== req.params.userId})[0])
+  });
+  const data = await req.dbConnect.collection("Users").find({_id: {$in: friends}}, {projection: {"full-name": 1, "pfp-filename": 1}}).toArray();
+  res.status(200).json(data)
 })
 
 router.put('/:userId/friend', authenticateToken, async(req, res) => {
