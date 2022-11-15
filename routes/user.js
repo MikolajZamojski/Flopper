@@ -91,6 +91,12 @@ router.get('/friends', authenticateToken, async(req, res) => {
   res.status(200).json(data)
 })
 
+router.get('/friendrequests', authenticateToken, async(req, res) => {
+  const friendResult = await req.dbConnect.collection("Friends").find({"friends.1" : req.userId, pending: true}, {projection: {_id: 0, friend: {$first: "$friends"}}}).toArray();
+  const data = await req.dbConnect.collection("Users").find({_id: {$in: friendResult.map((friendObj) => friendObj.friend)}}, {projection: {"full-name": 1, "pfp-filename": 1}}).toArray();
+  res.status(200).json(data)
+})
+
 router.put('/:userId/friend', authenticateToken, async(req, res) => {
   if(req.params.userId === req.userId) {
     return res.status(400).json({err: "You can't friend yourself!"});
