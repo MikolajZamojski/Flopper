@@ -29,31 +29,10 @@ router.get('/:userId/short', async(req, res)=> {
 router.get('/search', async(req, res) => {
   if(req.query.query.trim() != "") {
     const data = await req.dbConnect.collection("Users").aggregate([
-      {
-        $search: {
-          index: "userSearch",
-          compound: {
-            should: [{
-              autocomplete: {
-                query: req.query.query.trim(),
-                path: "_id",
-                fuzzy: {
-                  maxEdits: 1
-                }
-              }
-            },
-            {
-              autocomplete: {
-                query: req.query.query.trim(),
-                path: "full-name",
-                fuzzy: {
-                  maxEdits: 1
-                }
-              }
-            }]
-          }
-        }
-      },
+      {$search: {index: "userSearch", compound: {should: [
+        {autocomplete: {query: req.query.query.trim(), path: "_id", fuzzy: {maxEdits: 1}}},
+        {autocomplete: {query: req.query.query.trim(), path: "full-name", fuzzy: {maxEdits: 1}}}
+      ]}}},
       {$limit: 5},
       {$project: {"full-name": 1, "pfp-filename": 1}}
     ]).toArray()
@@ -99,6 +78,16 @@ router.get('/:userId/friends', async(req, res) => {
     friends.push(friendsObj.friends.filter(friendId => {return friendId !== req.params.userId})[0])
   });
   const data = await req.dbConnect.collection("Users").find({_id: {$in: friends}}, {projection: {"full-name": 1, "pfp-filename": 1}}).toArray();
+  res.status(200).json(data)
+})
+
+router.get('friends', authenticateToken, async(req, res) => {
+  const friendResult = await req.dbConnect.collection("Friends").find({friends : req.userId, pending: false}, {projection: {_id: 0, friends: 1}}).toArray();
+  let friends = [];
+  friendResult.forEach(friendsObj => {
+    friends.push(friendsObj.friends.filter(friendId => {return friendId !== req.userId})[0])
+  });
+  const data = await req.dbConnect.collection("Users").find({_id: {$in: friends}}, {projection: {"full-name": 1, "pfp-filename": 1, "last-seen": 1}}).toArray();
   res.status(200).json(data)
 })
 
