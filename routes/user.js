@@ -81,7 +81,7 @@ router.get('/:userId/friends', async(req, res) => {
   res.status(200).json(data)
 })
 
-router.get('friends', authenticateToken, async(req, res) => {
+router.get('/friends', authenticateToken, async(req, res) => {
   const friendResult = await req.dbConnect.collection("Friends").find({friends : req.userId, pending: false}, {projection: {_id: 0, friends: 1}}).toArray();
   let friends = [];
   friendResult.forEach(friendsObj => {
