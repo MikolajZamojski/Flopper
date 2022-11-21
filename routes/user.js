@@ -26,6 +26,31 @@ router.get('/:userId/short', async(req, res)=> {
   res.status(200).json(data)
 })
 
+router.get('/:userId/profile', authenticateToken, async(req, res)=> {
+  const data = await req.dbConnect.collection("Users").findOne({_id: req.params.userId}, {projection: {"password": 0, "last-seen": 0}});
+  if(data === null) {
+    return res.status(400).json({err: "User doesn't exist!"});
+  }
+  if(req.params.userId !== req.userId) {
+    const followResult = await req.dbConnect.collection("Follows").findOne({follower: req.userId, followed: data._id});
+    data.isFollowed = followResult !== null ? true : false;
+    const friendResult = await req.dbConnect.collection("Friends").findOne({friends : {$all : [req.params.userId, req.userId]}});
+    if(friendResult === null) {
+      data.friendStatus = "none"
+    }
+    else if(friendResult.pending === false) {
+      data.friendStatus = "friends"
+    }
+    else if(friendResult.friends[0] === req.userId) {
+      data.friendStatus = "sent"
+    }
+    else {
+      data.friendStatus = "received"
+    }
+  }
+  res.status(200).json(data)
+})
+
 router.get('/search', async(req, res) => {
   if(req.query.query.trim() != "") {
     const data = await req.dbConnect.collection("Users").aggregate([
