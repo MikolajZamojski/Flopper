@@ -4,10 +4,25 @@ const crypto = require('crypto')
 const { postUpload } = require("../multer/multer")
 const authenticateToken = require('../middlewares/authenticateToken');
 
-router.post('/new', authenticateToken, (req, res, next) => {req.postId = crypto.randomUUID().replaceAll('-', ''); next()}, postUpload.array('attachments'), async(req, res) => {
-  const attachments = req.files.map(file => ({content: file.mimetype.split('/')[0], filename: file.filename}));
-  const {text} = req.body;
-  await req.dbConnect.collection("Posts").insertOne({_id: req.postId, text: text, attachments: attachments, author: req.userId, date: new Date()});
+const postUploadFields = postUpload.fields([
+  {name: "a00", maxCount: 1}, {name: "a01", maxCount: 1}, {name: "a02", maxCount: 1}, {name: "a03", maxCount: 1}, {name: "a04", maxCount: 1}, {name: "a05", maxCount: 1},
+  {name: "a06", maxCount: 1}, {name: "a07", maxCount: 1}, {name: "a08", maxCount: 1}, {name: "a09", maxCount: 1}, {name: "a10", maxCount: 1}, {name: "a11", maxCount: 1}
+])
+
+router.post('/new', authenticateToken, (req, res, next) => {req.postId = crypto.randomUUID().replaceAll('-', ''); next()}, postUploadFields , async(req, res) => {
+  let attachments = [];
+  console.log(req.body)
+  Object.keys(req.files).forEach((key) => {
+    attachments.push({order: key, content: req.files[key][0].mimetype.split('/')[0], filename: req.files[key][0].filename})
+  })
+  Object.keys(req.body).forEach((key) => {
+    if(key !== "text") {
+      if(req.body[key].substr(0, 7) === "spotify")
+        attachments.push({order: key, content: "spotify", uri: req.body[key]})
+    }
+  })
+  const attachmentsResult = attachments.sort((a,b) => (a.order > b.order) ? 1 : ((b.order > a.order) ? -1 : 0)).map(({order, ...attr}) => attr)
+  await req.dbConnect.collection("Posts").insertOne({_id: req.postId, text: req.body.text, attachments: attachmentsResult, author: req.userId, date: new Date()});
   res.sendStatus(201);
 })
 

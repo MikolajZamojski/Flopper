@@ -61,5 +61,5 @@ function postFileFilter (req, file, cb) {
 
 module.exports = {
   pfpUpload: multer({ storage: pfpStorage, fileFilter: pfpFileFilter, limits: {fileSize: 10000000, files: 1}}),
-  postUpload: multer({ storage: postStorage, fileFilter: postFileFilter, limits: {files: 12, fileSize: 10000000, fields: 1}})
+  postUpload: multer({ storage: postStorage, fileFilter: postFileFilter, limits: {fileSize: 10000000, parts: 13}})
 };
