@@ -9,7 +9,7 @@ const postUploadFields = postUpload.fields([
   {name: "a06", maxCount: 1}, {name: "a07", maxCount: 1}, {name: "a08", maxCount: 1}, {name: "a09", maxCount: 1}, {name: "a10", maxCount: 1}, {name: "a11", maxCount: 1}
 ])
 
-router.post('/new', authenticateToken, (req, res, next) => {req.postId = crypto.randomUUID().replaceAll('-', ''); next()}, postUploadFields , async(req, res) => {
+router.post('/new', authenticateToken, (req, res, next) => {req.postId = crypto.randomUUID().replace(/-/g, ''); next()}, postUploadFields , async(req, res) => {
   let attachments = [];
   console.log(req.body)
   Object.keys(req.files).forEach((key) => {
@@ -49,7 +49,7 @@ router.post('/:postId/c', authenticateToken, async(req, res) => {
     return res.status(400).json({err: "Post doesn't exist!"});
   }
   const {text} = req.body;
-  const commentId = crypto.randomUUID().replaceAll('-', '');
+  const commentId = crypto.randomUUID().replace(/-/g, '');
   await req.dbConnect.collection("Comments").insertOne({_id: commentId, text: text, post: post._id, author: req.userId, date: new Date()});
   res.sendStatus(201);
 })
@@ -78,7 +78,7 @@ router.post('/:postId/c/:commentId/reply', authenticateToken, async(req, res) =>
     return res.status(400).json({err: "Comment doesn't exist!"});
   }
   const {text} = req.body;
-  const commentId = crypto.randomUUID().replaceAll('-', '');
+  const commentId = crypto.randomUUID().replace(/-/g, '');
   await req.dbConnect.collection("Comments").insertOne({_id: commentId, text: text, post: req.params.postId, author: req.userId, date: new Date(), "answering-comment": comment._id});
   res.sendStatus(201);
 })
