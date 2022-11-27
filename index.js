@@ -23,7 +23,7 @@ app.use('/u', user)
 
 app.use('/p', post)
 
-app.get('/', authenticateToken, (req, res) => {
+app.get('/', (req, res) => {
   res.sendStatus(200);
 })
 
