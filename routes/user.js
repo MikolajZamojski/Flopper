@@ -74,6 +74,14 @@ router.post('/about', authenticateToken, async(req, res) => {
   res.sendStatus(201);
 })
 
+router.post('/fullname', authenticateToken, async(req, res) => {
+  let {fullName} = req.body;
+  if(fullName === undefined)
+    return res.status(400).json({err : "Missing full name."});
+  await req.dbConnect.collection("Users").updateOne({_id: req.userId}, {$set : {"full-name": fullName}});
+  res.sendStatus(201);
+})
+
 router.put('/:userId/follow', authenticateToken, async(req, res) => {
   if(req.params.userId === req.userId) {
     return res.status(400).json({err: "You can't follow yourself!"});
