@@ -2,7 +2,6 @@ const { MongoClient } = require("mongodb");
 require('dotenv').config()
 
 const connectionString = process.env.DB_URI;
-console.log(connectionString + "test");
 const client = new MongoClient(connectionString, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
