@@ -17,6 +17,20 @@ router.get('/:postId', authenticateToken, async (req, res) => {
   res.status(200).json(data)
 })
 
+const limit = 0;
+
+router.get('/feed/:skips', authenticateToken, async (req, res) => {
+  if(isNaN(req.params.skips)) {
+    return res.status(400).json({err: "Skip parameter is not a number"});
+  }
+  const followResults = await req.dbConnect.collection("Follows").find({follower: req.userId}, {projection: {followed: 1, _id: 0}}).toArray();
+  const followArray = followResults.map((followResult) => {
+    return followResult.followed
+  });
+  const feedResult = await req.dbConnect.collection("Posts").aggregate([{$match: {author: {$in: followArray}}}, {$sort: {date: -1}}, {$skip: limit * parseInt(req.params.skips)}, {$limit: limit}]).toArray();
+  res.status(200).json(feedResult)
+})
+
 router.post('/new', authenticateToken, (req, res, next) => {req.postId = crypto.randomUUID().replace(/-/g, ''); next()}, postUploadFields , async(req, res) => {
   let attachments = [];
   console.log(req.body)
