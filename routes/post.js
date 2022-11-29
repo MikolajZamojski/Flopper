@@ -17,7 +17,7 @@ router.get('/:postId', authenticateToken, async (req, res) => {
   res.status(200).json(data)
 })
 
-const limit = 0;
+const limit = 10;
 
 router.get('/feed/:skips', authenticateToken, async (req, res) => {
   if(isNaN(req.params.skips)) {
