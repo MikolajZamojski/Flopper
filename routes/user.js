@@ -29,7 +29,7 @@ router.get('/:userId/short', async(req, res)=> {
 router.get('/:userId/profile', authenticateToken, async(req, res)=> {
   const data = await req.dbConnect.collection("Users").findOne({_id: req.params.userId}, {projection: {"password": 0, "last-seen": 0}});
   if(data === null) {
-    return res.status(400).json({err: "User doesn't exist!"});
+    return res.status(404).json({err: "User doesn't exist!"});
   }
   if(req.params.userId !== req.userId) {
     const followResult = await req.dbConnect.collection("Follows").findOne({follower: req.userId, followed: data._id});
@@ -88,7 +88,7 @@ router.put('/:userId/follow', authenticateToken, async(req, res) => {
   }
   const receiver = await req.dbConnect.collection("Users").findOne({_id: req.params.userId});
   if(receiver === null) {
-    return res.status(400).json({err: "User doesn't exist!"});
+    return res.status(404).json({err: "User doesn't exist!"});
   }
   const followResult = await req.dbConnect.collection("Follows").findOne({follower: req.userId, followed: receiver._id});
   if(followResult !== null) {
@@ -136,7 +136,7 @@ router.put('/:userId/friend', authenticateToken, async(req, res) => {
   }
   const receiver = await req.dbConnect.collection("Users").findOne({_id: req.params.userId});
   if(receiver === null) {
-    return res.status(400).json({err: "User doesn't exist!"});
+    return res.status(404).json({err: "User doesn't exist!"});
   }
   const friendResult = await req.dbConnect.collection("Friends").findOne({friends : {$all : [req.params.userId, req.userId]}});
   if(friendResult === null) {
@@ -159,7 +159,7 @@ router.put('/:userId/unfriend', authenticateToken, async(req, res) => {
   }
   const receiver = await req.dbConnect.collection("Users").findOne({_id: req.params.userId});
   if(receiver === null) {
-    return res.status(400).json({err: "User doesn't exist!"});
+    return res.status(404).json({err: "User doesn't exist!"});
   }
   const friendResult = await req.dbConnect.collection("Friends").deleteOne({friends : {$all : [req.params.userId, req.userId]}});
   if(friendResult.deletedCount === 0) {

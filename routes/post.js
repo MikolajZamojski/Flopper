@@ -9,6 +9,14 @@ const postUploadFields = postUpload.fields([
   {name: "a06", maxCount: 1}, {name: "a07", maxCount: 1}, {name: "a08", maxCount: 1}, {name: "a09", maxCount: 1}, {name: "a10", maxCount: 1}, {name: "a11", maxCount: 1}
 ])
 
+router.get('/:postId', authenticateToken, async (req, res) => {
+  const data = await req.dbConnect.collection("Posts").findOne({_id: req.params.postId});
+  if(data === null) {
+    return res.status(404).json({err: "Post doesn't exist!"});
+  }
+  res.status(200).json(data)
+})
+
 router.post('/new', authenticateToken, (req, res, next) => {req.postId = crypto.randomUUID().replace(/-/g, ''); next()}, postUploadFields , async(req, res) => {
   let attachments = [];
   console.log(req.body)
@@ -29,7 +37,7 @@ router.post('/new', authenticateToken, (req, res, next) => {req.postId = crypto.
 router.put('/:postId/like', authenticateToken, async(req, res) => {
   const post = await req.dbConnect.collection("Posts").findOne({_id: req.params.postId});
   if(post === null) {
-    return res.status(400).json({err: "Post doesn't exist!"});
+    return res.status(404).json({err: "Post doesn't exist!"});
   }
   const likeResult = await req.dbConnect.collection("PostsLikes").findOne({post: req.params.postId, user: req.userId});
   if(likeResult !== null) {
@@ -46,7 +54,7 @@ router.put('/:postId/like', authenticateToken, async(req, res) => {
 router.post('/:postId/c', authenticateToken, async(req, res) => {
   const post = await req.dbConnect.collection("Posts").findOne({_id: req.params.postId});
   if(post === null) {
-    return res.status(400).json({err: "Post doesn't exist!"});
+    return res.status(404).json({err: "Post doesn't exist!"});
   }
   const {text} = req.body;
   const commentId = crypto.randomUUID().replace(/-/g, '');
@@ -58,7 +66,7 @@ router.post('/:postId/c', authenticateToken, async(req, res) => {
 router.put('/:postId/c/:commentId/like', authenticateToken, async(req, res) => {
   const comment = await req.dbConnect.collection("Comments").findOne({post: req.params.postId, _id: req.params.commentId});
   if(comment === null) {
-    return res.status(400).json({err: "Comment doesn't exist!"});
+    return res.status(404).json({err: "Comment doesn't exist!"});
   }
   const likeResult = await req.dbConnect.collection("CommentsLikes").findOne({comment: req.params.commentId, user: req.userId});
   if(likeResult !== null) {
