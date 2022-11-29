@@ -28,6 +28,13 @@ router.get('/feed/:skips', authenticateToken, async (req, res) => {
     return followResult.followed
   });
   const feedResult = await req.dbConnect.collection("Posts").aggregate([{$match: {author: {$in: followArray}}}, {$sort: {date: -1}}, {$skip: limit * parseInt(req.params.skips)}, {$limit: limit}]).toArray();
+  const likeResult = await req.dbConnect.collection("PostsLikes").find({post: {$in: feedResult.map(result => result._id)}, user: req.userId}, {projection: {_id: 0, post: 1}}).toArray();
+  const likeArray = likeResult.map(result => {
+    return result.post
+  })
+  const feedResult2 = feedResult.map(post => {
+    post.isLiked = likeArray.includes(post._id);
+  })
   res.status(200).json(feedResult)
 })
 
