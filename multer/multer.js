@@ -7,7 +7,7 @@ const fs = require('fs')
 const pfpStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     req.hashedFileName = crypto.randomUUID().replace(/-/g, '');
-    req.dir = 'public/pfps/' + req.hashedFileName[0]
+    req.dir = '/tmp/public/pfps/' + req.hashedFileName[0]
     if(!fs.existsSync(req.dir)) {
       fs.mkdirSync(req.dir)
     }
@@ -42,7 +42,7 @@ function pfpFileFilter (req, file, cb) {
 const postStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     req.hashedFileName = crypto.randomUUID().replace(/-/g, '');
-    req.dir = 'public/pfps/' + req.hashedFileName[0]
+    req.dir = 'tmp/public/pfps/' + req.hashedFileName[0]
     if(!fs.existsSync(req.dir)) {
       fs.mkdirSync(req.dir)
     }
