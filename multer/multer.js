@@ -6,18 +6,11 @@ const fs = require('fs')
 
 const pfpStorage = multer.diskStorage({
   destination: function (req, file, cb) {
+    console.log("test")
     req.hashedFileName = crypto.randomUUID().replace(/-/g, '');
-    req.dir = '/tmp/public/pfps/' + req.hashedFileName[0]
+    req.dir = 'tmp/public/pfps/' + req.hashedFileName.split('').slice(0, 3).join("/")
     if(!fs.existsSync(req.dir)) {
-      fs.mkdirSync(req.dir)
-    }
-    req.dir += "/" + req.hashedFileName[1]
-    if(!fs.existsSync(req.dir)) {
-      fs.mkdirSync(req.dir)
-    }
-    req.dir += "/" + req.hashedFileName[2]
-    if(!fs.existsSync(req.dir)) {
-      fs.mkdirSync(req.dir)
+      fs.mkdirSync(req.dir, {recursive: true})
     }
     cb(null, req.dir)
   },
@@ -42,21 +35,9 @@ function pfpFileFilter (req, file, cb) {
 const postStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     req.hashedFileName = crypto.randomUUID().replace(/-/g, '');
-    req.dir = 'tmp/public/pfps/' + req.hashedFileName[0]
+    req.dir = 'tmp/public/posts/' + req.postId.split('').slice(0, 3).join("/") + '/' + req.postId;
     if(!fs.existsSync(req.dir)) {
-      fs.mkdirSync(req.dir)
-    }
-    req.dir += "/" + req.hashedFileName[1]
-    if(!fs.existsSync(req.dir)) {
-      fs.mkdirSync(req.dir)
-    }
-    req.dir += "/" + req.hashedFileName[2]
-    if(!fs.existsSync(req.dir)) {
-      fs.mkdirSync(req.dir)
-    }
-    req.dir += "/" + req.postId
-    if(!fs.existsSync(req.dir)) {
-      fs.mkdirSync(req.dir)
+      fs.mkdirSync(req.dir, {recursive: true})
     }
     cb(null, req.dir)
   },
