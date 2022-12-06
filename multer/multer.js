@@ -10,7 +10,9 @@ const pfpStorage = multer.diskStorage({
     req.hashedFileName = crypto.randomUUID().replace(/-/g, '');
     req.dir = 'public/pfps/' + req.hashedFileName.split('').slice(0, 3).join("/")
     if(!fs.existsSync(req.dir)) {
+      console.log("test1")
       fs.mkdirSync(req.dir, {recursive: true})
+      console.log("test2")
     }
     cb(null, req.dir)
   },
