@@ -11,6 +11,8 @@ const pfpStorage = multer.diskStorage({
     req.dir = 'public/pfps/' + req.hashedFileName.split('').slice(0, 3).join("/")
     console.log(fs.existsSync('public'))
     console.log(fs.existsSync('public/pfps'))
+    console.log(req.dir)
+    console.log(fs.existsSync(req.dir))
     if(!fs.existsSync(req.dir)) {
       console.log("test1")
       fs.mkdirSync(req.dir, {recursive: true})
