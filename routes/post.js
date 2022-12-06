@@ -40,7 +40,6 @@ router.get('/feed/:skips', authenticateToken, async (req, res) => {
 
 router.post('/new', authenticateToken, (req, res, next) => {req.postId = crypto.randomUUID().replace(/-/g, ''); next()}, postUploadFields , async(req, res) => {
   let attachments = [];
-  console.log(req.body)
   Object.keys(req.files).forEach((key) => {
     attachments.push({order: key, content: req.files[key][0].mimetype.split('/')[0], filename: req.files[key][0].filename})
   })
