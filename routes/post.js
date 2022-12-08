@@ -14,6 +14,7 @@ router.get('/:postId', authenticateToken, async (req, res) => {
   if(data === null) {
     return res.status(404).json({err: "Post doesn't exist!"});
   }
+  data.isLiked = await req.dbConnect.collection("PostsLikes").findOne({post: req.params.postId, user: req.userId}) !== null;
   res.status(200).json(data)
 })
 
@@ -24,16 +25,17 @@ router.get('/feed/:skips', authenticateToken, async (req, res) => {
     return res.status(400).json({err: "Skip parameter is not a number"});
   }
   const followResults = await req.dbConnect.collection("Follows").find({follower: req.userId}, {projection: {followed: 1, _id: 0}}).toArray();
-  const followArray = followResults.map((followResult) => {
+  let followArray = followResults.map((followResult) => {
     return followResult.followed
   });
+  followArray.push(req.userId);
   const feedResult = await req.dbConnect.collection("Posts").aggregate([{$match: {author: {$in: followArray}}}, {$sort: {date: -1}}, {$skip: limit * parseInt(req.params.skips)}, {$limit: limit}]).toArray();
   const likeResult = await req.dbConnect.collection("PostsLikes").find({post: {$in: feedResult.map(result => result._id)}, user: req.userId}, {projection: {_id: 0, post: 1}}).toArray();
   const likeArray = likeResult.map(result => {
     return result.post
   })
-  const feedResult2 = feedResult.map(post => {
-    post.isLiked = likeArray.includes(post._id);
+  feedResult.map(post => {
+    return post.isLiked = likeArray.includes(post._id);
   })
   res.status(200).json(feedResult)
 })
@@ -71,6 +73,21 @@ router.put('/:postId/like', authenticateToken, async(req, res) => {
   return res.sendStatus(201);
 })
 
+router.get('/:postId/c/:skips', authenticateToken, async (req, res) => {
+  if(isNaN(req.params.skips)) {
+    return res.status(400).json({err: "Skip parameter is not a number"});
+  }
+  const commentsResult = await req.dbConnect.collection("Comments").aggregate([{$match: {post: req.params.postId, "answering-comment": null}}, {$sort: {"likes-count": -1, date: 1}}, {$skip: limit * parseInt(req.params.skips)}, {$limit: limit}]).toArray();
+  const likeResult = await req.dbConnect.collection("CommentsLikes").find({comment: {$in: commentsResult.map(result => result._id)}, user: req.userId}, {projection: {_id: 0, comment: 1}}).toArray();
+  const likeArray = likeResult.map(result => {
+    return result.comment
+  })
+  commentsResult.map(comment => {
+    return comment.isLiked = likeArray.includes(comment._id);
+  })
+  res.status(200).json(commentsResult)
+})
+
 router.post('/:postId/c', authenticateToken, async(req, res) => {
   const post = await req.dbConnect.collection("Posts").findOne({_id: req.params.postId});
   if(post === null) {
@@ -82,7 +99,6 @@ router.post('/:postId/c', authenticateToken, async(req, res) => {
   res.sendStatus(201);
 })
 
-// add partial index
 router.put('/:postId/c/:commentId/like', authenticateToken, async(req, res) => {
   const comment = await req.dbConnect.collection("Comments").findOne({post: req.params.postId, _id: req.params.commentId});
   if(comment === null) {
@@ -109,6 +125,21 @@ router.post('/:postId/c/:commentId/reply', authenticateToken, async(req, res) =>
   const commentId = crypto.randomUUID().replace(/-/g, '');
   await req.dbConnect.collection("Comments").insertOne({_id: commentId, text: text, post: req.params.postId, author: req.userId, date: new Date(), "answering-comment": comment._id});
   res.sendStatus(201);
+})
+
+router.get('/:postId/c/:commentId/replies/:skips', authenticateToken, async (req, res) => {
+  if(isNaN(req.params.skips)) {
+    return res.status(400).json({err: "Skip parameter is not a number"});
+  }
+  const commentsResult = await req.dbConnect.collection("Comments").aggregate([{$match: {"answering-comment": req.params.commentId}}, {$sort: {date: 1}}, {$skip: limit * parseInt(req.params.skips)}, {$limit: limit}]).toArray();
+  const likeResult = await req.dbConnect.collection("CommentsLikes").find({comment: {$in: commentsResult.map(result => result._id)}, user: req.userId}, {projection: {_id: 0, comment: 1}}).toArray();
+  const likeArray = likeResult.map(result => {
+    return result.comment
+  })
+  commentsResult.map(comment => {
+    return comment.isLiked = likeArray.includes(comment._id);
+  })
+  res.status(200).json(commentsResult)
 })
 
 module.exports = router

@@ -11,7 +11,6 @@ const pfpStorage = multer.diskStorage({
     if(!fs.existsSync(req.dir)) {
       fs.mkdirSync(req.dir, {recursive: true})
     }
-    console.log(fs.existsSync(req.dir))
     cb(null, req.dir)
   },
   filename: function (req, file, cb) {
