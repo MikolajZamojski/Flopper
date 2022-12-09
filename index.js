@@ -5,7 +5,9 @@ const dbo = require('./db/conn');
 const auth = require('./routes/auth')
 const user = require('./routes/user')
 const post = require('./routes/post')
-const authenticateToken = require('./middlewares/authenticateToken');
+const comment = require('./routes/comment')
+const group = require('./routes/group')
+// const authenticateToken = require('./middlewares/authenticateToken');
 require('dotenv').config()
 
 app.use(cors())
@@ -22,6 +24,10 @@ app.use('/auth', auth)
 app.use('/u', user)
 
 app.use('/p', post)
+
+app.use('/c', comment)
+
+app.use('/g', group)
 
 app.get('/', (req, res) => {
   res.sendStatus(200);
