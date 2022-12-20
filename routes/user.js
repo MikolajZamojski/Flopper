@@ -82,7 +82,7 @@ router.get('/friendrequests', authenticateToken, async(req, res) => {
 router.post('/pfp', authenticateToken, pfpUpload.single('avatar'), async (req, res) => {
   const updateResult = (await req.dbConnect.collection("Users").findOneAndUpdate({_id: req.userId}, {$set : {"pfp-filename": req.hashedFileName}}, {upsert: true, projection: {"pfp-filename": 1, _id: 0}})).value["pfp-filename"];
   if(updateResult) {
-    await fs.rm('/tmp/pfps/' + updateResult.split('').slice(0, 3).join("/") + "/" + updateResult, (err) => {if(err) console.log(err)})
+    await fs.rm('./public/pfps/' + updateResult.split('').slice(0, 3).join("/") + "/" + updateResult, (err) => {if(err) console.log(err)})
   }
   const image = sharp(req.dir + "/" + req.hashedFileName);
   const imageDimensions = await image.metadata()
@@ -121,13 +121,14 @@ router.put('/:userId/follow', authenticateToken, async(req, res) => {
     await req.dbConnect.collection("Follows").deleteOne({_id: followResult._id});
     await req.dbConnect.collection("Users").updateOne({_id: req.userId}, {$inc: {"following-count": -1}})
     await req.dbConnect.collection("Users").updateOne({_id: receiver._id}, {$inc: {"followers-count": -1}})
+    return res.status(201).json({followed: false});
   }
   else {
     await req.dbConnect.collection("Follows").insertOne({follower: req.userId, followed: receiver._id});
     await req.dbConnect.collection("Users").updateOne({_id: req.userId}, {$inc: {"following-count": 1}}, {upsert: true})
     await req.dbConnect.collection("Users").updateOne({_id: receiver._id}, {$inc: {"followers-count": 1}}, {upsert: true})
+    return res.status(201).json({followed: true});
   }
-  return res.sendStatus(201);
 })
 
 router.put('/:userId/friend', authenticateToken, async(req, res) => {
@@ -165,7 +166,7 @@ router.put('/:userId/unfriend', authenticateToken, async(req, res) => {
   if(friendResult.deletedCount === 0) {
     return res.status(404).json({err: "Friend document not found."});
   }
-  return res.status(200).json({msg: "Unfriended."});
+  return res.status(201).json({msg: "Unfriended."});
 })
 
 module.exports = router
