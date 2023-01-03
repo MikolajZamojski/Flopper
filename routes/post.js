@@ -3,6 +3,7 @@ const router = express.Router()
 const crypto = require('crypto')
 const { postUpload } = require("../multer/multer")
 const authenticateToken = require('../middlewares/authenticateToken');
+const authorizePostAuthor = require('../middlewares/authorizePostAuthor')
 
 const postUploadFields = postUpload.fields([
   {name: "a00", maxCount: 1}, {name: "a01", maxCount: 1}, {name: "a02", maxCount: 1}, {name: "a03", maxCount: 1}, {name: "a04", maxCount: 1}, {name: "a05", maxCount: 1},
@@ -72,6 +73,18 @@ router.put('/:postId/like', authenticateToken, async(req, res) => {
     await req.dbConnect.collection("Posts").updateOne({_id: post._id}, {$inc: {"likes-count": 1}}, {upsert: true});
     return res.status(201).json({liked: true});
   }
+})
+
+router.delete('/:postId', authenticateToken, authorizePostAuthor, async(req, res) => {
+  await req.dbConnect.collection("Posts").deleteOne({_id: req.params.postId});
+  await req.dbConnect.collection("PostsLikes").deleteMany({post: req.params.postId});
+  const deletedComments = await req.dbConnect.collection("Comments").find({post: req.params.postId}, {projection: {_id: 1}}).toArray();
+  if(deletedComments) {
+    const deletedCommentsIds = deletedComments.map(commentObj => commentObj._id);
+    await req.dbConnect.collection("Comments").deleteMany({post: req.params.postId});
+    await req.dbConnect.collection("CommentsLikes").deleteMany({comment: {$in: deletedCommentsIds}});
+  }
+  return res.status(200).json({msg: "Post deleted."});
 })
 
 module.exports = router
