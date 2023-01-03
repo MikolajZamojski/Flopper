@@ -75,4 +75,22 @@ router.post('/:groupId/fullname', authenticateToken, authorizeGroupOwnership, as
   res.sendStatus(201);
 })
 
+router.delete('/:groupId', authenticateToken, authorizeGroupOwnership, async(req, res) => {
+  await req.dbConnect.collection("Groups").deleteOne({_id: req.params.groupId});
+  await req.dbConnect.collection("GroupsMembers").deleteMany({group: req.params.groupId});
+  const groupPosts = await req.dbConnect.collection("Posts").find({group: req.params.groupId}, {projection: {_id: 1}}).toArray();
+  if(groupPosts) {
+    const groupPostsIds = groupPosts.map(postObj => postObj._id)
+    await req.dbConnect.collection("Posts").deleteMany({group: req.params.groupId});
+    await req.dbConnect.collection("PostsLikes").deleteMany({post: {$in: groupPostsIds}});
+    const deletedComments = await req.dbConnect.collection("Comments").find({post: {$in: groupPostsIds}}, {projection: {_id: 1}}).toArray();
+    if(deletedComments) {
+      const deletedCommentsIds = deletedComments.map(commentObj => commentObj._id);
+      await req.dbConnect.collection("Comments").deleteMany({post: {$in: groupPostsIds}});
+      await req.dbConnect.collection("CommentsLikes").deleteMany({comment: {$in: deletedCommentsIds}});
+    }
+  }
+  return res.status(200).json({msg: "Group deleted."});
+})
+
 module.exports = router
