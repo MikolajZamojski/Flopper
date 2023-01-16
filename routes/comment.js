@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middlewares/authenticateToken');
+const crypto = require('crypto')
 
 const commentsLimit = 10;
 
@@ -53,6 +54,7 @@ router.post('/:commentId/reply', authenticateToken, async(req, res) => {
   const {text} = req.body;
   const commentId = crypto.randomUUID().replace(/-/g, '');
   await req.dbConnect.collection("Comments").insertOne({_id: commentId, text: text, post: comment.post, author: req.userId, date: new Date(), "answering-comment": comment._id});
+  await req.dbConnect.collection("Comments").updateOne({_id: comment._id}, {$inc: {"replies-count": 1}}, {upsert: true});
   res.sendStatus(201);
 })
 
