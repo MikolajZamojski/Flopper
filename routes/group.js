@@ -43,7 +43,7 @@ router.post('/', authenticateToken, async (req, res) => {
     return res.status(400).json({err : "Missing credentials."});
   await req.dbConnect.collection("Groups").insertOne({_id : groupId, "full-name": fullName, "members-count": 1});
   await req.dbConnect.collection("GroupsMembers").insertOne({group: groupId, user: req.userId, permission: "owner"});
-  res.status(201).json({msg: "Group created!"});
+  res.status(201).json({_id: groupId});
 })
 
 router.post('/:groupId/pfp', authenticateToken, authorizeGroupOwnership, pfpUpload.single('avatar'), async (req, res) => {
