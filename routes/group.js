@@ -7,6 +7,16 @@ const crypto = require('crypto')
 const authenticateToken = require('../middlewares/authenticateToken');
 const authorizeGroupOwnership = require('../middlewares/authorizeGroupOwnership');
 
+router.get('/', authenticateToken, async(req, res) => {
+  const groupResult = await req.dbConnect.collection("GroupsMembers").find({user: req.userId, permission: {$in: ["member", "owner"]}}, {projection: {_id: 0, group: 1}}).toArray();
+  let groups = [];
+  groupResult.forEach(groupObj => {
+    groups.push(groupObj.group)
+  });
+  const data = await req.dbConnect.collection("Groups").find({_id: {$in: groups}}, {projection: {"full-name": 1, "pfp-filename": 1}}).toArray();
+  res.status(200).json(data)
+})
+
 router.get('/search', async(req, res) => {
   if(req.query.query.trim() != "") {
     const data = await req.dbConnect.collection("Groups").aggregate([
