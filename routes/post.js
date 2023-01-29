@@ -71,7 +71,7 @@ router.put('/:postId/like', authenticateToken, async(req, res) => {
   else {
     await req.dbConnect.collection("PostsLikes").insertOne({post: post._id, user: req.userId});
     await req.dbConnect.collection("Posts").updateOne({_id: post._id}, {$inc: {"likes-count": 1}}, {upsert: true});
-    return res.status(201).json({isLiked: true, likesCount: post["likes-count"] || 1});
+    return res.status(201).json({isLiked: true, likesCount: post["likes-count"] + 1 || 1});
   }
 })
 
