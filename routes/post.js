@@ -30,7 +30,22 @@ router.get('/feed/:skips', authenticateToken, async (req, res) => {
     return followResult.followed
   });
   followArray.push(req.userId);
-  const feedResult = await req.dbConnect.collection("Posts").aggregate([{$match: {author: {$in: followArray}}}, {$sort: {date: -1}}, {$skip: postsLimit * parseInt(req.params.skips)}, {$limit: postsLimit}]).toArray();
+  const feedResult = await req.dbConnect.collection("Posts").aggregate([{$match: {author: {$in: followArray}, group: {$exists: false}}}, {$sort: {date: -1}}, {$skip: postsLimit * parseInt(req.params.skips)}, {$limit: postsLimit}]).toArray();
+  const likeResult = await req.dbConnect.collection("PostsLikes").find({post: {$in: feedResult.map(result => result._id)}, user: req.userId}, {projection: {_id: 0, post: 1}}).toArray();
+  const likeArray = likeResult.map(result => {
+    return result.post
+  })
+  feedResult.map(post => {
+    return post.isLiked = likeArray.includes(post._id);
+  })
+  res.status(200).json(feedResult)
+})
+
+router.get('/feed/:userId/:skips', authenticateToken, async (req, res) => {
+  if(isNaN(req.params.skips)) {
+    return res.status(400).json({err: "Skip parameter is not a number"});
+  }
+  const feedResult = await req.dbConnect.collection("Posts").aggregate([{$match: {author: req.params.userId, group: {$exists: false}}}, {$sort: {date: -1}}, {$skip: postsLimit * parseInt(req.params.skips)}, {$limit: postsLimit}]).toArray();
   const likeResult = await req.dbConnect.collection("PostsLikes").find({post: {$in: feedResult.map(result => result._id)}, user: req.userId}, {projection: {_id: 0, post: 1}}).toArray();
   const likeArray = likeResult.map(result => {
     return result.post
