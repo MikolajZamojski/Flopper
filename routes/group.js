@@ -37,6 +37,16 @@ router.get('/:groupId/short', async(req, res)=> {
   res.status(200).json(data)
 })
 
+router.get('/:groupId/members', async(req, res)=> {
+  const membersData = await req.dbConnect.collection("GroupsMembers").find({group: req.params.groupId, permission: {$in: ["member", "owner"]}}, {projection: {"user": 1, "_id": 0}}).toArray();
+  let members = [];
+  membersData.forEach(memberObj => {
+    members.push(memberObj.user)
+  });
+  const data = await req.dbConnect.collection("Users").find({_id: {$in: members}}, {projection: {"full-name": 1, "pfp-filename": 1}}).toArray();
+  res.status(200).json(data)
+})
+
 router.get('/:groupId/profile', authenticateToken, async(req, res)=> {
   const data = await req.dbConnect.collection("Groups").findOne({_id: req.params.groupId});
   if(data === null) {
