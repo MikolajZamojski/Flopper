@@ -46,6 +46,30 @@ router.get('/:groupId/profile', authenticateToken, async(req, res)=> {
   res.status(200).json(data)
 })
 
+router.get('/:groupId/requests', authenticateToken, authorizeGroupOwnership, async(req, res)=> {
+  const data = await req.dbConnect.collection("Groups").findOne({_id: req.params.groupId});
+  if(data === null) {
+    return res.status(404).json({err: "Group doesn't exist!"});
+  }
+  const requestsData = await req.dbConnect.collection("GroupsMembers").find({group: req.params.groupId, permission: "request"}, {projection: {"user": 1, "_id": 0}}).toArray();
+  let requests = [];
+  requestsData.forEach(requestObj => {
+    requests.push(requestObj.user)
+  });
+  const usersData = await req.dbConnect.collection("Users").find({_id: {$in: requests}}, {projection: {"full-name": 1, "pfp-filename": 1}}).toArray();
+  res.status(200).json(usersData);
+})
+
+router.get('/invites', authenticateToken, async(req, res)=> {
+  const invitesData = await req.dbConnect.collection("GroupsMembers").find({user: req.userId, permission: "invite"}, {projection: {"group": 1, "_id": 0}}).toArray();
+  let invites = [];
+  invitesData.forEach(inviteObj => {
+    invites.push(inviteObj.group)
+  });
+  const groupsData = await req.dbConnect.collection("Groups").find({_id: {$in: invites}}, {projection: {"full-name": 1, "pfp-filename": 1}}).toArray();
+  res.status(200).json(groupsData);
+})
+
 router.post('/', authenticateToken, async (req, res) => {
   const groupId = crypto.randomUUID().replace(/-/g, '');
   const { fullName } = req.body;
