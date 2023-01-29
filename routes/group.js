@@ -85,24 +85,6 @@ router.post('/:groupId/fullname', authenticateToken, authorizeGroupOwnership, as
   res.sendStatus(201);
 })
 
-// router.put('/:groupId/request', authenticateToken, async(req, res) => {
-//   const data = await req.dbConnect.collection("Groups").findOne({_id: req.params.groupId});
-//   if(data === null) {
-//     return res.status(404).json({err: "Group doesn't exist!"});
-//   }
-//   const memberData = await req.dbConnect.collection("GroupsMembers").findOne({group: req.params.groupId, user: req.userId});
-//   if(memberData === null) {
-//     await req.dbConnect.collection("GroupsMembers").insertOne({group: req.params.groupId, user: req.userId, permission: "request"});
-//     return res.status(201).json({requested: true});
-//   }
-//   if(memberData.permission === "request") {
-//     await req.dbConnect.collection("GroupsMembers").deleteOne({_id: memberData._id});
-//     return res.status(201).json({requested: false});
-//   }
-//   await req.dbConnect.collection("Groups").updateOne({_id: req.params.groupId}, {$set : {"full-name": fullName}});
-//   return res.status(409).json({err: ""});
-// })
-
 router.put('/:groupId/request', authenticateToken, async(req, res) => {
   const data = await req.dbConnect.collection("Groups").findOne({_id: req.params.groupId});
   if(data === null) {
@@ -117,25 +99,81 @@ router.put('/:groupId/request', authenticateToken, async(req, res) => {
     await req.dbConnect.collection("GroupsMembers").deleteOne({_id: memberData._id});
     return res.status(201).json({requested: false});
   }
-  await req.dbConnect.collection("Groups").updateOne({_id: req.params.groupId}, {$set : {"full-name": fullName}});
-  return res.status(409).json({err: ""});
+  if(memberData.permission === "invite") {
+    await req.dbConnect.collection("GroupsMembers").updateOne({_id: memberData._id}, {$set: {permission: "member"}})
+    await req.dbConnect.collection("Groups").updateOne({_id: req.params.groupId}, {$inc : {"members-count": 1}});
+    return res.status(201).json({member: true})
+  }
+  return res.status(409).json({err: "Already a member"});
 })
 
-router.delete('/:groupId/:userId', authenticateToken, authorizeGroupOwnership, async(req, res) => {
-  await req.dbConnect.collection("GroupsMembers").deleteOne({group: req.params.groupId, user: req.params.userId});
-  const groupPosts = await req.dbConnect.collection("Posts").find({group: req.params.groupId, author: req.params.userId}, {projection: {_id: 1}}).toArray();
-  if(groupPosts) {
-    const groupPostsIds = groupPosts.map(postObj => postObj._id)
-    await req.dbConnect.collection("Posts").deleteMany({group: req.params.groupId});
-    await req.dbConnect.collection("PostsLikes").deleteMany({post: {$in: groupPostsIds}});
-    const deletedComments = await req.dbConnect.collection("Comments").find({post: {$in: groupPostsIds}}, {projection: {_id: 1}}).toArray();
-    if(deletedComments) {
-      const deletedCommentsIds = deletedComments.map(commentObj => commentObj._id);
-      await req.dbConnect.collection("Comments").deleteMany({post: {$in: groupPostsIds}});
-      await req.dbConnect.collection("CommentsLikes").deleteMany({comment: {$in: deletedCommentsIds}});
+router.put('/:groupId/:userId/invite', authenticateToken, authorizeGroupOwnership, async(req, res) => {
+  if(req.userId === req.params.userId) {
+    return res.status(404).json({err: "You cannot invite yourself!"});
+  }
+  const data = await req.dbConnect.collection("Groups").findOne({_id: req.params.groupId});
+  if(data === null) {
+    return res.status(404).json({err: "Group doesn't exist!"});
+  }
+  const memberData = await req.dbConnect.collection("GroupsMembers").findOne({group: req.params.groupId, user: req.params.userId});
+  if(memberData === null) {
+    await req.dbConnect.collection("GroupsMembers").insertOne({group: req.params.groupId, user: req.params.userId, permission: "invite"});
+    return res.status(201).json({invited: true});
+  }
+  if(memberData.permission === "invite") {
+    await req.dbConnect.collection("GroupsMembers").deleteOne({_id: memberData._id});
+    return res.status(201).json({invited: false});
+  }
+  if(memberData.permission === "request") {
+    await req.dbConnect.collection("GroupsMembers").updateOne({_id: memberData._id}, {$set: {permission: "member"}})
+    await req.dbConnect.collection("Groups").updateOne({_id: req.params.groupId}, {$inc : {"members-count": 1}});
+    return res.status(201).json({member: true})
+  }
+  return res.status(409).json({err: "Already a member"});
+})
+
+router.delete('/:groupId/quit', authenticateToken, async(req, res) => {
+  const data = await req.dbConnect.collection("Groups").findOne({_id: req.params.groupId});
+  if(data === null) {
+    return res.status(404).json({err: "Group doesn't exist!"});
+  }
+  const memberData = await req.dbConnect.collection("GroupsMembers").findOne({group: req.params.groupId, user: req.userId});
+  if(memberData.permission !== null) {
+    await req.dbConnect.collection("GroupsMembers").deleteOne({_id: memberData._id});
+    if(memberData.permission === "member") {
+      await req.dbConnect.collection("Groups").updateOne({_id: req.params.groupId}, {$inc : {"members-count": -1}});
+    }
+    return res.sendStatus(200);
+  }
+  return res.status(409).json({err: "User is not a member of this group."})
+  
+})
+
+router.delete('/:groupId/:userId/kick', authenticateToken, authorizeGroupOwnership, async(req, res) => {
+  const memberData = await req.dbConnect.collection("GroupsMembers").findOne({group: req.params.groupId, user: req.params.userId});
+  if(memberData !== null) {
+    await req.dbConnect.collection("GroupsMembers").deleteOne({group: req.params.groupId, user: req.params.userId});
+    if(memberData.permission !== "member") {
+      return res.sendStatus(200);
+    }
+    await req.dbConnect.collection("Groups").updateOne({_id: req.params.groupId}, {$inc : {"members-count": -1}});
+    const groupPosts = await req.dbConnect.collection("Posts").find({group: req.params.groupId, author: req.params.userId}, {projection: {_id: 1}}).toArray();
+    if(groupPosts) {
+      const groupPostsIds = groupPosts.map(postObj => postObj._id)
+      await req.dbConnect.collection("Posts").deleteMany({group: req.params.groupId});
+      await req.dbConnect.collection("PostsLikes").deleteMany({post: {$in: groupPostsIds}});
+      const deletedComments = await req.dbConnect.collection("Comments").find({post: {$in: groupPostsIds}}, {projection: {_id: 1}}).toArray();
+      if(deletedComments) {
+        const deletedCommentsIds = deletedComments.map(commentObj => commentObj._id);
+        await req.dbConnect.collection("Comments").deleteMany({post: {$in: groupPostsIds}});
+        await req.dbConnect.collection("CommentsLikes").deleteMany({comment: {$in: deletedCommentsIds}});
+      }
+      return res.sendStatus(200);
     }
   }
-  return res.sendStatus(200);
+  else {
+    return res.sendStatus(409);
+  }
 })
 
 

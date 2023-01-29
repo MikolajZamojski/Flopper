@@ -67,12 +67,12 @@ router.put('/:commentId/like', authenticateToken, async(req, res) => {
   if(likeResult !== null) {
     await req.dbConnect.collection("CommentsLikes").deleteOne({_id: likeResult._id});
     await req.dbConnect.collection("Comments").updateOne({_id: comment._id}, {$inc: {"likes-count": -1}});
-    return res.status(201).json({liked: false});
+    return res.status(201).json({isLiked: false, likesCount: comment["likes-count"] - 1});
   }
   else {
     await req.dbConnect.collection("CommentsLikes").insertOne({comment: comment._id, user: req.userId});
     await req.dbConnect.collection("Comments").updateOne({_id: comment._id}, {$inc: {"likes-count": 1}}, {upsert: true});
-    return res.status(201).json({liked: true});
+    return res.status(201).json({isLiked: true, likesCount: comment["likes-count"] + 1 || 1});
   }
 })
 
