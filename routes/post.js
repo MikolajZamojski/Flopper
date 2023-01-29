@@ -63,7 +63,7 @@ router.post('/', authenticateToken, (req, res, next) => {req.postId = crypto.ran
   })
   Object.keys(req.body).forEach((key) => {
     if(key !== "text") {
-      if(req.body[key].substr(0, 7) === "spotify")
+      if(req.body[key].substr(0, 31) === "https://open.spotify.com/track/")
         attachments.push({order: key, content: "spotify", uri: req.body[key]})
     }
   })
