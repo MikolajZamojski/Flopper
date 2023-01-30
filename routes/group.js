@@ -52,7 +52,8 @@ router.get('/:groupId/profile', authenticateToken, async(req, res)=> {
   if(data === null) {
     return res.status(404).json({err: "Group doesn't exist!"});
   }
-  data.isMember = await req.dbConnect.collection("GroupsMembers").findOne({group: req.params.groupId, user: req.userId}) !== null;
+  data.requested = await req.dbConnect.collection("GroupsMembers").findOne({group: req.params.groupId, user: req.userId, permission: "request"}) !== null;
+  data.isMember = await req.dbConnect.collection("GroupsMembers").findOne({group: req.params.groupId, user: req.userId, permission: "member"}) !== null;
   data.isOwner = await req.dbConnect.collection("GroupsMembers").findOne({group: req.params.groupId, user: req.userId, permission: "owner"}) !== null;
   res.status(200).json(data)
 })
