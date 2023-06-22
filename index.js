@@ -9,8 +9,7 @@ const comment = require('./routes/comment')
 const group = require('./routes/group')
 require('dotenv').config()
 
-app.use(cors())
-app.options('*', cors())
+app.use(cors({methods: 'GET,POST,PUT,DEL,OPTIONS,HEAD'}))
 app.use(express.json())
 app.use(express.static('./public'))
 
