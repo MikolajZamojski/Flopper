@@ -24,7 +24,7 @@ router.post('/register', async (req, res) => {
   if(findResult !== null)
     return res.status(409).json({err : "User already exists!"});
   password = await bcrypt.hash(password, 10)
-  const insertResult = await req.dbConnect.collection("Users").insertOne({_id : id, password: password, "full-name": fullName, "last-seen": new Date()})
+  await req.dbConnect.collection("Users").insertOne({_id : id, password: password, "full-name": fullName, "last-seen": new Date()})
   res.status(201).json({msg: "Account created!"});
 })
 

@@ -27,7 +27,7 @@ function pfpFileFilter (req, file, cb) {
  if(mimetype && extname){
      return cb(null,true);
  } else {
-     cb('Error: Images Only!');
+     cb('Error: Images only!');
  }
 }
 
@@ -54,7 +54,7 @@ function postFileFilter (req, file, cb) {
  if(mimetype && extname){
      return cb(null,true);
  } else {
-     cb('Error: Images and videos Only!');
+     cb('Error: Images and videos only!');
  }
 }
 

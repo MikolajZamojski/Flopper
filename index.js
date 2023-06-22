@@ -7,10 +7,9 @@ const user = require('./routes/user')
 const post = require('./routes/post')
 const comment = require('./routes/comment')
 const group = require('./routes/group')
-// const authenticateToken = require('./middlewares/authenticateToken');
 require('dotenv').config()
 
-app.use(cors())
+app.use(cors({origin: 'https://flopper-client.vercel.app/', optionsSuccessStatus: 200}))
 app.use(express.json())
 app.use(express.static('./public'))
 
