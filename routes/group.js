@@ -213,7 +213,7 @@ router.delete('/:groupId/:userId/kick', authenticateToken, authorizeGroupOwnersh
 })
 
 
-router.delete('/:groupId', authenticateToken, authorizeGroupOwnership, async(req, res) => {
+router.delete('/:groupId', authenticateToken, async(req, res) => {
   // await req.dbConnect.collection("Groups").deleteOne({_id: req.params.groupId});
   // await req.dbConnect.collection("GroupsMembers").deleteMany({group: req.params.groupId});
   // const groupPosts = await req.dbConnect.collection("Posts").find({group: req.params.groupId}, {projection: {_id: 1}}).toArray();
