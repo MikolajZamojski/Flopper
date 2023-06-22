@@ -168,6 +168,8 @@ router.put('/:groupId/:userId/invite', authenticateToken, authorizeGroupOwnershi
   return res.status(409).json({err: "Already a member"});
 })
 
+router.use(cors({origin: 'https://flopper-client.vercel.app'}))
+
 router.delete('/:groupId/quit', authenticateToken, async(req, res) => {
   const data = await req.dbConnect.collection("Groups").findOne({_id: req.params.groupId});
   if(data === null) {
