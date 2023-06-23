@@ -80,9 +80,12 @@ router.get('/friendrequests', authenticateToken, async(req, res) => {
 })
 
 router.post('/pfp', authenticateToken, pfpUpload.single('avatar'), async (req, res) => {
-  const updateResult = (await req.dbConnect.collection("Users").findOneAndUpdate({_id: req.userId}, {$set : {"pfp-filename": req.hashedFileName}}, {upsert: true, projection: {"pfp-filename": 1, _id: 0}})).value["pfp-filename"];
-  if(updateResult) {
+  const updateResult = (await req.dbConnect.collection("Users").findOneAndUpdate({_id: req.userId}, {$set : {"pfp-filename": (req.hashedFileName ?? null)}}, {upsert: true, projection: {"pfp-filename": 1, _id: 0}})).value["pfp-filename"];
+  if(updateResult !== null && updateResult !== undefined) {
     await fs.rm('./public/pfps/' + updateResult.split('').slice(0, 3).join("/") + "/" + updateResult, (err) => {if(err) console.log(err)})
+  }
+  if(req.dir === undefined || req.hashedFileName === undefined) {
+    return res.status(201).json({msg: "Profile picture reset."});
   }
   const image = sharp(req.dir + "/" + req.hashedFileName);
   const imageDimensions = await image.metadata()

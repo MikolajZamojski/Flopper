@@ -9,7 +9,7 @@ const comment = require('./routes/comment')
 const group = require('./routes/group')
 require('dotenv').config()
 
-app.use(cors({origin: 'https://flopper-client.vercel.app'}))
+app.use(cors({origin: 'http://localhost:3000'}))
 app.use(express.json())
 app.use(express.static('./public'))
 
