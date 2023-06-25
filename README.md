@@ -2,7 +2,9 @@
 
 ## Czym jest? 🤔
 
-Jest to REST API stworzone przy pomocy [Node.js](https://nodejs.org/en) oraz [Express.js](https://expressjs.com/) dla serwisu społecznościowego [Flopper](https://flopper-client.vercel.app/), dostępne na bezpośrednie zapytania również [tutaj](https://flopper-api-h23g.onrender.com).
+Jest to REST API stworzone przy pomocy [Node.js](https://nodejs.org/en) oraz [Express.js](https://expressjs.com/) dla serwisu społecznościowego [Flopper](https://flopper-client.vercel.app/), dostępne na bezpośrednie zapytania również [tutaj](https://flopper-api-h23g.onrender.com). Część funkcjonalności API nie została wykorzystana w części frontend.
+
+**W celu szybkiego doświadczenia wszystkich interakcji można zalogować się na konto o id: _gosc_ i haśle: _gosc_**
 
 Jako że do hostingu wykorzystywany jest darmowy plan na [Renderze](https://render.com/), **interfejs po dłuższym czasie nieaktywności przechodzi w stan uśpienia, a jego następne użycie poprzedzone jest chwilą na rozruch**.
 
